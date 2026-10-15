@@ -109,6 +109,7 @@ svg text { font-family: var(--f-math); fill: var(--ink); }
 .nin-btns button:disabled { opacity: .4; cursor: default; }
 .gates-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.55fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .card h3 + .sub { margin: -6px 0 10px; }
+.stage-head + .sub { margin: -2px 0 10px; }
 .math.inl { font-size: 1.12em; }
 .stage-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .stage-head .math { font-size: 1.9rem; color: var(--brand-ink); }
@@ -346,8 +347,8 @@ kbd { font-family: var(--f-body); border: 1px solid var(--line); border-bottom-w
       <article class="card a-table">
         <div class="stage-head"><h3>Tabela-verdade</h3>
           <button class="btn" type="button" id="edit-out" aria-pressed="false" title="Clique nas saídas para trocar 0/1 e gerar a expressão">Editar saídas</button></div>
+        <p class="sub" id="e-table-note">Clique numa linha para aplicar aquela combinação nas entradas.</p>
         <div class="scroll"><table class="tv" id="e-table"></table></div>
-        <p class="note" id="e-table-note">Clique numa linha para aplicar a combinação nas entradas.</p>
       </article>
       <article class="card a-kmap">
         <h3>Simplificação pelo mapa de Karnaugh</h3>
@@ -1263,7 +1264,7 @@ $("#edit-out").addEventListener("click", (e) => {
   e.currentTarget.setAttribute("aria-pressed", state.edit);
   $("#e-table-note").textContent = state.edit
     ? "Modo edição: clique na coluna S para trocar 0 ↔ 1. A expressão é refeita como soma de produtos."
-    : "Clique numa linha para aplicar a combinação nas entradas.";
+    : "Clique numa linha para aplicar aquela combinação nas entradas.";
   updateExpr();
 });
 $("#fs").addEventListener("click", () => {
