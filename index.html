@@ -229,6 +229,39 @@ table.tv.edit td.out { outline: 1px dashed var(--brand); outline-offset: -3px; }
 .foot-in a { color: var(--brand-ink); }
 kbd { font-family: var(--f-body); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 0.82rem; }
 
+
+/* ---------------- modo flip-flops */
+.ff-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.55fr) minmax(0, 1fr);
+  grid-template-areas: "circ table wave"; gap: 18px; align-items: start; }
+.ff-grid > * { min-width: 0; }
+.f-circ { grid-area: circ; } .f-table { grid-area: table; } .f-wave { grid-area: wave; }
+.ff-grid.cnt { grid-template-columns: minmax(0, 2fr) minmax(240px, 0.6fr); grid-template-areas: "circ table" "wave table"; }
+.cnt-opts { display: inline-flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.cnt-opts select { border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; background: var(--panel); }
+.seg-txt button { width: auto; padding: 6px 14px; font-size: 0.92rem; }
+.warn { background: var(--lamp-soft); border-left: 4px solid var(--lamp); border-radius: 6px; padding: 8px 12px;
+  margin: 8px 0 4px; font-weight: 600; }
+.ovl { text-decoration: overline; }
+#ff-stage svg { margin-top: 6px; }
+.ff-box { fill: var(--panel); stroke: var(--brand); stroke-width: 2.2; }
+.ff-pin { fill: var(--panel); stroke: var(--brand); stroke-width: 2; }
+.ff-tri { fill: none; stroke: var(--brand); stroke-width: 2; stroke-linejoin: round; }
+.seg-bg { fill: var(--grid); stroke: var(--line); }
+.seg-on { fill: var(--g2); } .seg-off { fill: var(--line); opacity: .55; }
+.wv { fill: none; stroke-width: 2.6; stroke-linejoin: round; }
+.wv-ck { stroke: var(--wire); } .wv-in { stroke: var(--brand); } .wv-out { stroke: var(--one); }
+.wv-grid { stroke: var(--grid); stroke-width: 1; }
+.wv-edge { stroke: var(--g4); stroke-width: 1.4; stroke-dasharray: 4 4; }
+#ff-table.noclick tbody tr { cursor: default; }
+#mode-ff table.tv td:last-child:not(:first-child) { white-space: nowrap; }
+.pc-h { margin-top: 18px !important; }
+@media (max-width: 1199px) {
+  .ff-grid { grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr); grid-template-areas: "circ table" "wave wave"; }
+  .ff-grid.cnt { grid-template-columns: minmax(0, 1fr); grid-template-areas: "circ" "wave" "table"; }
+}
+@media (max-width: 700px) {
+  .ff-grid, .ff-grid.cnt { grid-template-columns: minmax(0, 1fr); grid-template-areas: "circ" "table" "wave"; }
+}
 @media (max-width: 999px) {
   .gates-grid { grid-template-columns: minmax(0, 1fr) minmax(240px, 0.6fr); }
   .gates-grid .ladder-card { grid-column: 1 / -1; }
@@ -260,7 +293,8 @@ kbd { font-family: var(--f-body); border: 1px solid var(--line); border-bottom-w
     </div>
     <div class="modes" role="tablist" aria-label="Modo">
       <button id="tab-gates" role="tab" aria-selected="true" aria-controls="mode-gates">Portas lógicas</button>
-      <button id="tab-expr" role="tab" aria-selected="false" aria-controls="mode-expr">Expressão</button>
+      <button id="tab-expr" role="tab" aria-selected="false" aria-controls="mode-expr">Expressão Booleana</button>
+      <button id="tab-ff" role="tab" aria-selected="false" aria-controls="mode-ff">Flip-flops e contadores</button>
     </div>
     <div class="tools">
       <button class="btn" id="fs" type="button" title="Tela cheia (F11 também funciona)">Tela cheia</button>
@@ -371,12 +405,59 @@ kbd { font-family: var(--f-body); border: 1px solid var(--line); border-bottom-w
       </div>
     </div>
   </section>
+
+  <!-- ======================================================= MODO FLIP-FLOPS -->
+  <section id="mode-ff" class="main-in" role="tabpanel" aria-labelledby="tab-ff" hidden>
+    <div class="gates-bar">
+      <div class="picker" id="ff-picker" aria-label="Escolha o flip-flop"></div>
+      <div class="cnt-opts" id="cnt-opts" hidden>
+        <span class="eyebrow" id="bits-lbl">Flip-flops</span>
+        <div class="nin-btns" id="bits" role="group" aria-labelledby="bits-lbl">
+          <button type="button" data-b="2">2</button><button type="button" data-b="3">3</button><button type="button" data-b="4">4</button>
+        </div>
+        <label class="eyebrow" for="cnt-mod">Contar de 0 até</label>
+        <select id="cnt-mod"></select>
+      </div>
+    </div>
+    <div class="ff-grid" id="ff-grid">
+      <article class="card f-circ">
+        <div class="stage-head">
+          <div>
+            <div class="eyebrow" id="ff-en"></div>
+            <h2 id="ff-name"></h2>
+          </div>
+          <div class="nin-btns seg-txt" id="ff-view" role="group" aria-label="Desenho">
+            <button type="button" data-view="dentro">Por dentro</button><button type="button" data-view="simbolo">Símbolo</button>
+          </div>
+        </div>
+        <div class="switches" id="ff-ctl" style="margin: 6px 0 4px"></div>
+        <div class="warn" id="ff-msg" hidden></div>
+        <div class="scroll" id="ff-stage"></div>
+        <dl class="facts">
+          <div><dt>Como funciona</dt><dd id="ff-desc"></dd></div>
+          <div><dt>Circuito integrado comercial</dt><dd id="ff-ci"></dd></div>
+        </dl>
+      </article>
+      <article class="card f-table">
+        <h3 id="ff-th">Tabela</h3>
+        <p class="sub" id="ff-tsub"></p>
+        <table class="tv" id="ff-table"></table>
+        <div id="ff-prclr"></div>
+      </article>
+      <article class="card f-wave">
+        <div class="stage-head"><h3>Forma de onda</h3>
+          <button class="btn" type="button" id="ff-clear">Limpar</button></div>
+        <p class="sub">Cada fatia é um evento: uma entrada mudou ou o clock subiu ou desceu. As linhas tracejadas marcam as descidas do clock.</p>
+        <div class="scroll" id="ff-wave"></div>
+      </article>
+    </div>
+  </section>
 </main>
 
 <footer class="foot">
   <div class="foot-in">
     <span>© Prof. Mateus Caruso · CEFET/RJ, Unidade Maracanã · Uso livre para ensino, com citação do autor (<a href="https://creativecommons.org/licenses/by-nc/4.0/deed.pt-br" target="_blank" rel="noopener license">CC BY-NC 4.0</a>)</span>
-    <span>Atalhos: <kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd> alternam as entradas · <kbd>Espaço</kbd> percorre a tabela · <kbd>1</kbd>–<kbd>7</kbd> escolhem a porta</span>
+    <span id="keys"></span>
   </div>
 </footer>
 
@@ -610,7 +691,10 @@ try {
   if ([2, 3, 4].includes(s.nIn)) state.nIn = s.nIn;
 } catch (e) { /* sem armazenamento */ }
 function save() {
-  try { localStorage.setItem("simlog", JSON.stringify({ expr: state.expr, mode: state.mode, gate: state.gate, nIn: state.nIn })); } catch (e) {}
+  try {
+    localStorage.setItem("simlog", JSON.stringify({ expr: state.expr, mode: state.mode, gate: state.gate, nIn: state.nIn,
+      ffType: ff.type, ffView: ff.view, bits: ff.bits, mod: ff.mod }));
+  } catch (e) {}
 }
 
 // ======================================================================== desenho de portas
@@ -1182,21 +1266,486 @@ function updateExpr() {
   $("#e-ladder").innerHTML = buildLadder(mt.groups.map((t) => Logic.termLits(t, names)), state.env);
 }
 
+// ======================================================================== MODO FLIP-FLOPS E CONTADORES
+// Convenções das aulas 08 e 09: RS básico com NE (entradas invertidas), clock por nível no RS com clock e no JK,
+// mestre-escravo e T mudam na DESCIDA, PR e CLR ativos em 0, contador assíncrono com Q0 = bit menos significativo.
+const FF_TYPES = [
+  { id: "rs", nome: "RS básico", en: "portas NE", ins: ["S", "R"], clk: null, prclr: false, inside: true,
+    desc: "Duas portas NE realimentadas formam uma <b>memória de 1 bit</b>: S = 1 liga (Q = 1), R = 1 desliga (Q = 0) e S = R = 0 mantém o estado anterior. S = R = 1 é proibido.",
+    ci: "Montado com 7400 (NE) e 7404 (inversores). Pronto: 74279 (4 latches com entradas ativas em 0)." },
+  { id: "rsck", nome: "RS com clock", en: "clock por nível", ins: ["S", "R"], clk: "nivel", prclr: true, inside: true,
+    desc: "Igual ao RS, mas S e R só passam <b>enquanto CK = 1</b>; com CK = 0 a saída fica parada. PR e CLR (ativos em 0) agem direto no latch, sem esperar o clock.",
+    ci: "Montado com um 7400 (4 portas NE)." },
+  { id: "jk", nome: "JK", en: "clock por nível", ins: ["J", "K"], clk: "nivel", prclr: true, inside: true,
+    desc: "Como o RS com clock, mas J = K = 1 <b>inverte</b> a saída em vez de ser proibido. O problema: com J = K = 1, enquanto CK = 1 a saída inverte sem parar (oscila).",
+    ci: "Não se usa assim: na prática o JK é mestre-escravo (7476)." },
+  { id: "jkme", nome: "JK mestre-escravo", en: "muda na descida", ins: ["J", "K"], clk: "descida", prclr: true, inside: false,
+    desc: "Só muda na <b>descida do clock</b> (a bolinha antes do triângulo, no símbolo). J e K funcionam como no JK, e J = K = 1 inverte uma vez só por pulso.",
+    ci: "7476 (2 JK mestre-escravo com PR e CLR)." },
+  { id: "t", nome: "T", en: "muda na descida", ins: [], clk: "descida", prclr: true, inside: false,
+    desc: "É o JK mestre-escravo com J = K = 1: a cada <b>descida</b> do clock a saída inverte. A frequência de Q é a metade da do clock.",
+    ci: "7476 com J = K = 1." },
+  { id: "cnt", nome: "Contador", en: "assíncrono", ins: [], clk: "descida", prclr: false, inside: false, desc: "", ci: "" },
+];
+const ff = { type: "rs", view: "dentro", bits: 4, mod: 16, v: {}, Q: 0, Qn: 1, count: 0, msg: "", edge: false,
+             hist: [], osc: null, auto: null, pulse: null, flash: null };
+try {
+  const s = JSON.parse(localStorage.getItem("simlog") || "{}");
+  if (FF_TYPES.some((t) => t.id === s.ffType)) ff.type = s.ffType;
+  if (s.ffView === "simbolo") ff.view = "simbolo";
+  if ([2, 3, 4].includes(s.bits)) ff.bits = s.bits;
+  if (s.mod >= 2 && s.mod <= 1 << ff.bits) ff.mod = s.mod;
+} catch (e) { /* sem armazenamento */ }
+const ffT = () => FF_TYPES.find((t) => t.id === ff.type) || FF_TYPES[0];
+const bin = (x, n) => x.toString(2).padStart(n, "0");
+
+// ------------------------------------------------------------------ simulação
+function ffRecord() {
+  ff.hist.push({ ...ff.v, Q: ff.Q, Qn: ff.Qn, c: ff.count });
+  if (ff.hist.length > 80) ff.hist.shift();
+}
+function stopOsc() { if (ff.osc) { clearInterval(ff.osc); ff.osc = null; } }
+function startOsc() {
+  if (ff.osc) return;
+  ff.osc = setInterval(() => { ff.Q ^= 1; ff.Qn = 1 - ff.Q; ffRecord(); ffRender(); }, 260);
+}
+function ffStopTimers() {
+  stopOsc();
+  if (ff.auto) { clearInterval(ff.auto); ff.auto = null; }
+  if (ff.pulse) { clearTimeout(ff.pulse); ff.pulse = null; }
+  if (ff.flash) { clearTimeout(ff.flash); ff.flash = null; }
+}
+function ffReset() {
+  ffStopTimers();
+  ff.v = { S: 0, R: 0, J: 0, K: 0, CK: 0, PR: 1, CLR: 1 };
+  ff.Q = 0; ff.Qn = 1; ff.count = 0; ff.msg = ""; ff.edge = false;
+  ff.hist = []; ffRecord();
+}
+// devolve "norec" quando o estado mostrado é passageiro (o número que a NE zera na hora)
+function ffEval(prevCK) {
+  const t = ffT(), v = ff.v;
+  const fall = prevCK === 1 && v.CK === 0;
+  ff.msg = ""; ff.edge = false;
+  if (t.id === "cnt") {
+    if (!fall) return;
+    const n = 1 << ff.bits;
+    ff.count = (ff.count + 1) % n; ff.edge = true;
+    if (ff.mod < n && ff.count === ff.mod) {
+      ff.msg = `Chegou a ${bin(ff.mod, ff.bits)} (${ff.mod}): a NE vai a 0 e o CLR zera todos os flip-flops na hora. Esse número quase não aparece.`;
+      if (ff.flash) clearTimeout(ff.flash);
+      ff.flash = setTimeout(() => { ff.flash = null; ff.count = 0; ffRecord(); ffRender(); }, 280);
+      return "norec";
+    }
+    return;
+  }
+  if (t.prclr && (!v.PR || !v.CLR)) {
+    stopOsc();
+    if (!v.PR && !v.CLR) { ff.Q = 1; ff.Qn = 1; ff.msg = "PR e CLR em 0 ao mesmo tempo: Q e Q̄ vão os dois a 1. Não se usa."; }
+    else if (!v.PR) { ff.Q = 1; ff.Qn = 0; ff.msg = "PR = 0 força Q = 1 na hora, sem esperar o clock."; }
+    else { ff.Q = 0; ff.Qn = 1; ff.msg = "CLR = 0 força Q = 0 na hora, sem esperar o clock."; }
+    return;
+  }
+  const settle = (why) => {
+    if (ff.Q !== ff.Qn) return;
+    const q = Math.random() < 0.5 ? 1 : 0;
+    ff.Q = q; ff.Qn = 1 - q;
+    ff.msg = `${why}: o resultado é imprevisível. Desta vez ficou Q = ${q}.`;
+  };
+  if (t.id === "rs" || t.id === "rsck") {
+    const en = t.id === "rs" ? 1 : v.CK, s = v.S & en, r = v.R & en;
+    if (s && r) { ff.Q = 1; ff.Qn = 1; ff.msg = "Estado proibido: Q e Q̄ valem 1 ao mesmo tempo."; }
+    else if (s) { ff.Q = 1; ff.Qn = 0; }
+    else if (r) { ff.Q = 0; ff.Qn = 1; }
+    else settle(t.id === "rs" ? "S e R voltaram a 0 juntos" : "Saindo de S = R = 1 de uma vez");
+    return;
+  }
+  settle("PR e CLR voltaram a 1 juntos");
+  if (t.id === "jk") {
+    if (v.CK && v.J && v.K) {
+      startOsc();
+      ff.msg = "Oscilando: com J = K = 1 e CK = 1 a saída inverte sem parar. Por isso se usa o mestre-escravo.";
+      return;
+    }
+    stopOsc();
+    if (v.CK && v.J) { ff.Q = 1; ff.Qn = 0; }
+    else if (v.CK && v.K) { ff.Q = 0; ff.Qn = 1; }
+    return;
+  }
+  if (fall) {   // mestre-escravo e T: só na descida
+    ff.edge = true;
+    if (t.id === "t" || (v.J && v.K)) ff.Q ^= 1;
+    else if (v.J) ff.Q = 1;
+    else if (v.K) ff.Q = 0;
+    ff.Qn = 1 - ff.Q;
+  }
+}
+function ffSet(vals) {
+  const prev = ff.v.CK;
+  Object.assign(ff.v, vals);
+  if (ffEval(prev) !== "norec") ffRecord();
+  ffRender();
+}
+function ffPulse() {
+  if (!ffT().clk || ff.pulse) return;
+  if (ff.v.CK) { ffSet({ CK: 0 }); return; }
+  ffSet({ CK: 1 });
+  ff.pulse = setTimeout(() => { ff.pulse = null; ffSet({ CK: 0 }); }, 380);
+}
+function ffAuto() {
+  if (ff.auto) { clearInterval(ff.auto); ff.auto = null; }
+  else ff.auto = setInterval(() => ffSet({ CK: 1 - ff.v.CK }), 500);
+  ffRender();
+}
+
+// ------------------------------------------------------------------ desenhos
+function ffInLab(p, name, y, x = 18) {
+  p.push(`<g class="clickable" data-ff="${name}"><rect x="${x - 18}" y="${f1(y - 13)}" width="40" height="26" fill="transparent"/>` +
+    `<text class="lab" x="${x}" y="${f1(y + 6)}" text-anchor="middle">${name}</text></g>`);
+}
+const svgWrap = (W, H, body, k = 1.05) =>
+  `<svg viewBox="0 0 ${f1(W)} ${f1(H)}" width="${Math.round(W * k)}" role="img" aria-label="Circuito do flip-flop">${body}</svg>`;
+
+// RS básico, RS com clock e JK desenhados por dentro, com as portas NE (como nos slides da aula 08)
+function ffInside(t) {
+  const v = ff.v, rs = t.id === "rs", jk = t.id === "jk", pc = t.prclr;
+  const [i1, i2] = t.ins, p = [], late = [];
+  const x1 = 112, h1 = rs ? 34 : 52, yT = 60, yB = 200;
+  const k1 = rs ? "not" : "nand", n1 = rs ? 1 : jk ? 3 : 2;
+  const g1 = gateShape(k1, x1, yT - h1 / 2, h1, n1, "a"), g2 = gateShape(k1, x1, yB - h1 / 2, h1, n1, "b");
+  const x2 = 296, h2 = 64, yQ = 70, yQn = 190, n2 = pc ? 3 : 2;
+  const L1 = gateShape("nand", x2, yQ - h2 / 2, h2, n2, "Q"), L2 = gateShape("nand", x2, yQn - h2 / 2, h2, n2, "Qn");
+  const P1 = rs ? { in: g1.ins[0] } : jk ? { fb: g1.ins[0], in: g1.ins[1], ck: g1.ins[2] } : { in: g1.ins[0], ck: g1.ins[1] };
+  const P2 = rs ? { in: g2.ins[0] } : jk ? { ck: g2.ins[0], in: g2.ins[1], fb: g2.ins[2] } : { ck: g2.ins[0], in: g2.ins[1] };
+  const PL1 = pc ? { PR: L1.ins[0], a: L1.ins[1], fb: L1.ins[2] } : { a: L1.ins[0], fb: L1.ins[1] };
+  const PL2 = pc ? { fb: L2.ins[0], b: L2.ins[1], CLR: L2.ins[2] } : { fb: L2.ins[0], b: L2.ins[1] };
+  [[i1, P1.in], [i2, P2.in]].forEach(([nm, pn]) => {
+    ffInLab(p, nm, pn[1]);
+    p.push(wire([[34, pn[1]], pn], nm));
+    late.push(dotAt(34, pn[1], nm), badge(60, pn[1], nm));
+  });
+  if (!rs) {
+    const yc = 130, xc = 80;
+    ffInLab(p, "CK", yc);
+    p.push(wire([[34, yc], [xc, yc]], "CK"), wire([[xc, P1.ck[1]], [xc, P2.ck[1]]], "CK"),
+           wire([[xc, P1.ck[1]], P1.ck], "CK"), wire([[xc, P2.ck[1]], P2.ck], "CK"));
+    late.push(dotAt(xc, yc, "CK"), badge(56, yc, "CK"));
+  }
+  const jog = (from, to, src) => (Math.abs(from[1] - to[1]) < 0.5 ? wire([from, to], src)
+    : wire([from, [262, from[1]], [262, to[1]], to], src));
+  p.push(jog(g1.out, PL1.a, "a"), jog(g2.out, PL2.b, "b"));
+  late.push(badge(222, g1.out[1], "a"), badge(222, g2.out[1], "b"));
+  if (pc) {
+    p.push(`<g class="clickable" data-ff="PR"><rect x="228" y="6" width="44" height="22" fill="transparent"/><text class="lab-s" x="250" y="22" text-anchor="middle">PR</text></g>`);
+    p.push(wire([[250, 28], [250, PL1.PR[1]], PL1.PR], "PR"));
+    late.push(badge(250, 42, "PR"));
+    p.push(`<g class="clickable" data-ff="CLR"><rect x="226" y="240" width="48" height="22" fill="transparent"/><text class="lab-s" x="250" y="256" text-anchor="middle">CLR</text></g>`);
+    p.push(wire([[250, 240], [250, PL2.CLR[1]], PL2.CLR], "CLR"));
+    late.push(badge(250, 224, "CLR"));
+  }
+  const [qx, qy] = L1.out, [nx, ny] = L2.out;
+  // realimentação do latch: Q volta para a NE de baixo, Q̄ para a de cima
+  p.push(wire([[392, qy], [392, 126], [282, 126], [282, PL2.fb[1]], PL2.fb], "Q"));
+  p.push(wire([[382, ny], [382, 136], [272, 136], [272, PL1.fb[1]], PL1.fb], "Qn"));
+  late.push(dotAt(392, qy, "Q"), dotAt(382, ny, "Qn"));
+  if (jk) {   // no JK, Q̄ volta para a NE do J (por cima) e Q para a NE do K (por baixo)
+    p.push(wire([[424, ny], [424, 6], [92, 6], [92, P1.fb[1]], P1.fb], "Qn"));
+    p.push(wire([[436, qy], [436, 270], [92, 270], [92, P2.fb[1]], P2.fb], "Q"));
+    late.push(dotAt(424, ny, "Qn"), dotAt(436, qy, "Q"));
+  }
+  const xl = 474;
+  p.push(wire([[qx, qy], [xl - 13, qy]], "Q"), wire([[nx, ny], [xl - 13, ny]], "Qn"));
+  p.push(g1.svg, g2.svg, L1.svg, L2.svg);
+  p.push(lamp(xl, qy, 13, "Q"), lamp(xl, ny, 13, "Qn"));
+  p.push(varLabel(xl + 40, qy + 6, "Q", false), varLabel(xl + 40, ny + 6, "Q", true));
+  late.push(badge(410, qy, "Q"), badge(410, ny, "Qn"));
+  const a = rs ? 1 - v.S : jk ? 1 - (ff.Qn & v.J & v.CK) : 1 - (v.S & v.CK);
+  const b = rs ? 1 - v.R : jk ? 1 - (ff.Q & v.K & v.CK) : 1 - (v.R & v.CK);
+  const vals = { ...v, a, b, Q: ff.Q, Qn: ff.Qn };
+  return { svg: svgWrap(530, 278, p.join("") + late.join("")), vals };
+}
+
+// símbolo (bloco) do flip-flop
+function ffSymbol(t) {
+  const p = [], late = [], desc = t.clk === "descida";
+  const bx = 176, by = 62, bw = 130, bh = 170, yI1 = by + 36, yC = by + bh / 2, yI2 = by + bh - 36;
+  p.push(`<rect class="ff-box" x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="6"/>`);
+  if (t.ins.length) {
+    [[t.ins[0], yI1], [t.ins[1], yI2]].forEach(([nm, y]) => {
+      ffInLab(p, nm, y);
+      p.push(wire([[34, y], [bx, y]], nm), `<text class="lab-s" x="${bx + 12}" y="${y + 5}">${nm}</text>`);
+      late.push(dotAt(34, y, nm), badge(104, y, nm));
+    });
+  }
+  if (t.clk) {
+    ffInLab(p, "CK", yC);
+    p.push(wire([[34, yC], [desc ? bx - 12 : bx, yC]], "CK"));
+    if (desc) p.push(`<circle class="ff-pin" cx="${bx - 6}" cy="${yC}" r="6"/>`);
+    p.push(`<path class="ff-tri" d="M${bx} ${yC - 10}L${bx + 15} ${yC}L${bx} ${yC + 10}"/>`);
+    late.push(dotAt(34, yC, "CK"), badge(104, yC, "CK"));
+  }
+  if (t.id === "t") p.push(`<text class="lab" x="${bx + bw / 2}" y="${yC + 7}" text-anchor="middle">T</text>`);
+  if (t.prclr) {
+    const xm = bx + bw / 2;
+    p.push(`<g class="clickable" data-ff="PR"><rect x="${xm - 60}" y="2" width="56" height="26" fill="transparent"/><text class="lab-s" x="${xm - 10}" y="22" text-anchor="end">PR</text></g>`);
+    p.push(wire([[xm, 10], [xm, by - 12]], "PR"), `<circle class="ff-pin" cx="${xm}" cy="${by - 6}" r="6"/>`,
+           `<text class="lab-s" x="${xm}" y="${by + 18}" text-anchor="middle" style="font-size:12px">PR</text>`);
+    late.push(badge(xm, 32, "PR"));
+    const yb = by + bh;
+    p.push(`<g class="clickable" data-ff="CLR"><rect x="${xm - 66}" y="${yb + 26}" width="62" height="26" fill="transparent"/><text class="lab-s" x="${xm - 10}" y="${yb + 46}" text-anchor="end">CLR</text></g>`);
+    p.push(wire([[xm, yb + 12], [xm, yb + 52]], "CLR"), `<circle class="ff-pin" cx="${xm}" cy="${yb + 6}" r="6"/>`,
+           `<text class="lab-s" x="${xm}" y="${yb - 8}" text-anchor="middle" style="font-size:12px">CLR</text>`);
+    late.push(badge(xm, yb + 32, "CLR"));
+  }
+  const xl = 420;
+  p.push(wire([[bx + bw, yI1], [xl - 13, yI1]], "Q"), wire([[bx + bw, yI2], [xl - 13, yI2]], "Qn"));
+  p.push(`<text class="lab-s" x="${bx + bw - 10}" y="${yI1 + 5}" text-anchor="end">Q</text>`,
+         varLabel(bx + bw - 10, yI2 + 5, "Q", true, "lab-s", "end"));
+  p.push(lamp(xl, yI1, 13, "Q"), lamp(xl, yI2, 13, "Qn"));
+  p.push(varLabel(xl + 40, yI1 + 6, "Q", false), varLabel(xl + 40, yI2 + 6, "Q", true));
+  late.push(badge(356, yI1, "Q"), badge(356, yI2, "Qn"));
+  const vals = { ...ff.v, Q: ff.Q, Qn: ff.Qn };
+  return { svg: svgWrap(476, by + bh + 62, p.join("") + late.join("")), vals };
+}
+
+// display de 7 segmentos (tabela das aulas: 6 com o a, 7 sem o f, 9 com o d)
+const SEG7 = { 0: "abcdef", 1: "bc", 2: "abdeg", 3: "abcdg", 4: "bcfg", 5: "acdfg", 6: "acdefg", 7: "abc", 8: "abcdefg", 9: "abcdfg" };
+function seg7(x, y, w, h, d) {
+  const t = 7, on = d === null ? "" : SEG7[d], s = [];
+  const R = { a: [x + t, y, w - 2 * t, t], d: [x + t, y + h - t, w - 2 * t, t], g: [x + t, y + h / 2 - t / 2, w - 2 * t, t],
+              f: [x, y + t, t, h / 2 - 1.5 * t], b: [x + w - t, y + t, t, h / 2 - 1.5 * t],
+              e: [x, y + h / 2 + t / 2, t, h / 2 - 1.5 * t], c: [x + w - t, y + h / 2 + t / 2, t, h / 2 - 1.5 * t] };
+  for (const k of "abcdefg") {
+    const [rx, ry, rw, rh] = R[k];
+    s.push(`<rect class="${on.includes(k) ? "seg-on" : "seg-off"}" x="${f1(rx)}" y="${f1(ry)}" width="${f1(rw)}" height="${f1(rh)}" rx="2.5"/>`);
+  }
+  return s.join("");
+}
+
+// contador assíncrono: JK mestre-escravo com J = K = 1 em cascata (aula 09)
+function ffCounter() {
+  const n = ff.bits, c = ff.count, p = [], late = [];
+  const bw = 74, bh = 100, by = 86, x0 = 78, sp = 140;
+  const yJ = by + 22, yC = by + bh / 2, yK = by + bh - 22, yBus = by + bh + 34;
+  const bit = (i) => (c >> i) & 1;
+  const N = 1 << n, useNE = ff.mod < N;
+  const neIns = useNE ? [...Array(n).keys()].filter((i) => (ff.mod >> i) & 1) : [];
+  const neOut = useNE && neIns.every((i) => bit(i)) ? 0 : 1;
+  const vals = { CK: ff.v.CK, one: 1, clr: neOut };
+  for (let i = 0; i < n; i++) vals["Q" + i] = bit(i);
+  ffInLab(p, "CK", yC);
+  p.push(wire([[34, yC], [x0 - 12, yC]], "CK"));
+  late.push(dotAt(34, yC, "CK"), badge(54, yC, "CK"));
+  const xs = [], clrX = [];
+  for (let i = 0; i < n; i++) {
+    const bx = x0 + i * sp, xn = bx + bw + 24;
+    xs.push(xn); clrX.push(bx + bw / 2);
+    p.push(`<rect class="ff-box" x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="5"/>`);
+    p.push(`<text class="lab-s" x="${bx + 9}" y="${yJ + 5}">J</text><text class="lab-s" x="${bx + 9}" y="${yK + 5}">K</text>`,
+           `<text class="lab-s" x="${bx + bw - 8}" y="${yJ + 5}" text-anchor="end">Q</text>`,
+           `<text class="lab-s" x="${bx + bw / 2}" y="${by + bh - 6}" text-anchor="middle" style="font-size:11px">CLR</text>`);
+    for (const y of [yJ, yK]) p.push(wire([[bx - 22, y], [bx, y]], "one"), `<text class="lab-s" x="${bx - 27}" y="${y + 5}" text-anchor="end">1</text>`);
+    p.push(`<circle class="ff-pin" cx="${bx - 6}" cy="${yC}" r="6"/><path class="ff-tri" d="M${bx} ${yC - 9}L${bx + 13} ${yC}L${bx} ${yC + 9}"/>`);
+    p.push(`<circle class="ff-pin" cx="${bx + bw / 2}" cy="${by + bh + 6}" r="6"/>`, wire([[bx + bw / 2, by + bh + 12], [bx + bw / 2, yBus]], "clr"));
+    const q = "Q" + i;
+    p.push(wire([[bx + bw, yJ], [xn, yJ], [xn, 44]], q));
+    p.push(lamp(xn, 30, 10, q), `<text class="lab" x="${xn + 26}" y="36">Q<tspan font-size="13" dy="4">${i}</tspan></text>`);
+    if (i < n - 1) { p.push(wire([[xn, yJ], [xn, yC], [x0 + (i + 1) * sp - 12, yC]], q)); late.push(dotAt(xn, yJ, q)); }
+    late.push(badge(xn, 66, q));
+  }
+  const xr = xs[n - 1];
+  let H = yBus + 30, xEnd = xr + 40;
+  if (useNE) {
+    const k = neIns.length, gh = Math.max(36, k * 16 + 8), gx = xr + 40, gy = yBus + 22;
+    const g = gateShape("nand", gx, gy, gh, k, "clr");
+    // o Q mais à direita vai para o pino de cima; assim os fios não se cruzam
+    const order = neIns.slice().sort((a, b) => b - a);
+    order.forEach((i, j) => {
+      const pin = g.ins[j], from = i < n - 1 ? yC : yJ;
+      p.push(wire([[xs[i], from], [xs[i], pin[1]], pin], "Q" + i));
+      late.push(dotAt(xs[i], from, "Q" + i));
+    });
+    p.push(g.svg);
+    const xo = g.out[0] + 18;
+    p.push(wire([g.out, [xo, g.out[1]], [xo, yBus], [clrX[0], yBus]], "clr"));
+    clrX.slice(1).forEach((x) => late.push(dotAt(x, yBus, "clr")));
+    late.push(badge(xo, (g.out[1] + yBus) / 2, "clr"));
+    p.push(`<text class="lab-s" x="${f1(gx + g.w / 2)}" y="${f1(gy + gh + 22)}" text-anchor="middle">NE</text>`);
+    H = gy + gh + 30; xEnd = xo + 16;
+  } else {
+    p.push(wire([[x0 - 30, yBus], [clrX[n - 1], yBus]], "one"), `<text class="lab-s" x="${x0 - 36}" y="${yBus + 5}" text-anchor="end">1</text>`);
+    clrX.slice(0, -1).forEach((x) => late.push(dotAt(x, yBus, "one")));
+  }
+  // display com o número em decimal
+  const dx = Math.max(xr + 64, xEnd - 112), dy = 70, dw = 34, dh = 62;
+  p.push(`<rect class="seg-bg" x="${dx - 10}" y="${dy - 10}" width="${2 * dw + 34}" height="${dh + 20}" rx="8"/>`);
+  p.push(seg7(dx, dy, dw, dh, c >= 10 ? Math.floor(c / 10) : null), seg7(dx + dw + 14, dy, dw, dh, c % 10));
+  p.push(`<text class="lab-s" x="${dx + dw + 7}" y="${dy + dh + 32}" text-anchor="middle">${bin(c, n)} = ${c}</text>`);
+  const W = Math.max(xEnd, dx + 2 * dw + 40);
+  return { svg: svgWrap(W, Math.max(H, dy + dh + 40), p.join("") + late.join(""), 1), vals };
+}
+
+// forma de onda: uma fatia por evento (mudança de entrada ou do clock)
+function ffWave(t) {
+  const maxN = t.id === "cnt" ? 32 : 24, Hs = ff.hist.slice(-maxN), rows = [];
+  if (t.id === "cnt") {
+    rows.push(["CK", (s) => s.CK, "ck"]);
+    for (let i = 0; i < ff.bits; i++) rows.push(["Q" + i, (s) => (s.c >> i) & 1, "out"]);
+  } else {
+    if (t.clk) rows.push(["CK", (s) => s.CK, "ck"]);
+    t.ins.forEach((nm) => rows.push([nm, (s) => s[nm], "in"]));
+    if (t.prclr && Hs.some((s) => !s.PR || !s.CLR)) rows.push(["PR", (s) => s.PR, "in"], ["CLR", (s) => s.CLR, "in"]);
+    rows.push(["Q", (s) => s.Q, "out"]);
+    if (t.id === "rs" || t.id === "rsck") rows.push(["~Q", (s) => s.Qn, "out"]);
+  }
+  const lw = 50, sw = t.id === "cnt" ? 22 : 18, rh = 40, amp = 20, top = 10;
+  const W = lw + maxN * sw + 8, H = top + rows.length * rh + 4, p = [];
+  for (let k = 0; k <= maxN; k++) p.push(`<line class="wv-grid" x1="${lw + k * sw}" x2="${lw + k * sw}" y1="${top}" y2="${H - 4}"/>`);
+  if (t.clk === "descida") Hs.forEach((s, k) => {
+    if (k && Hs[k - 1].CK === 1 && s.CK === 0) p.push(`<line class="wv-edge" x1="${lw + k * sw}" x2="${lw + k * sw}" y1="${top}" y2="${H - 4}"/>`);
+  });
+  rows.forEach(([nm, f, kind], r) => {
+    const y1 = top + r * rh + 8, y0 = y1 + amp;
+    if (nm === "~Q") p.push(varLabel(lw - 12, y0, "Q", true, "lab-s", "end"));
+    else p.push(`<text class="lab-s" x="${lw - 12}" y="${y0}" text-anchor="end">${nm}</text>`);
+    let d = "";
+    Hs.forEach((s, k) => { const y = f(s) ? y1 : y0, x = lw + k * sw; d += (k ? "L" : "M") + `${x} ${y}L${x + sw} ${y}`; });
+    p.push(`<path class="wv wv-${kind}" d="${d}"/>`);
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" role="img" aria-label="Forma de onda">${p.join("")}</svg>`;
+}
+
+// ------------------------------------------------------------------ tabelas
+function ffTables(t) {
+  const v = ff.v, Qa = "Q<sub>a</sub>", nQa = '<span class="ovl">Q</span><sub>a</sub>', Qf = "Q<sub>f</sub>";
+  const idx = (a, b) => [[0, 0], [1, 0], [0, 1], [1, 1]].findIndex(([x, y]) => x === a && y === b);
+  let head, rows, cur = -1, title = "Tabela", sub = "Clique numa linha para aplicar aquela combinação nas entradas.";
+  if (t.id === "rs") {
+    head = ["S", "R", Qf, ""];
+    rows = [[0, 0, Qa, "mantém"], [1, 0, 1, "SET (liga)"], [0, 1, 0, "RESET (desliga)"], [1, 1, "?", "proibido"]];
+    cur = idx(v.S, v.R);
+  } else if (t.id === "rsck" || t.id === "jk") {
+    const [a, b] = t.ins, jk = t.id === "jk";
+    head = ["CK", a, b, Qf, ""];
+    rows = [[0, "x", "x", Qa, "ignora"], [1, 0, 0, Qa, "mantém"], [1, 1, 0, 1, "set"], [1, 0, 1, 0, "reset"],
+            [1, 1, 1, jk ? "oscila" : "?", jk ? "problema" : "proibido"]];
+    cur = v.CK ? 1 + idx(v[a], v[b]) : 0;
+  } else if (t.id === "jkme") {
+    head = ["CK", "J", "K", Qf, ""];
+    rows = [["sem ↓", "x", "x", Qa, "mantém"], ["↓", 0, 0, Qa, "mantém"], ["↓", 1, 0, 1, "set"], ["↓", 0, 1, 0, "reset"], ["↓", 1, 1, nQa, "inverte"]];
+    cur = 1 + idx(v.J, v.K);
+    sub = "A linha destacada é o que acontece na próxima descida do clock. Clique numa linha para escolher J e K.";
+  } else if (t.id === "t") {
+    head = ["pulso de CK", Qf];
+    rows = [["não desceu", Qa + " (mantém)"], ["desceu (↓)", nQa + " (inverte)"]];
+    cur = ff.edge ? 1 : 0;
+    sub = "A linha destacada mostra o último evento.";
+  } else {
+    const n = ff.bits, m = Math.min(ff.mod, 1 << n);
+    title = "Tabela de contagem";
+    head = ["descidas", ...[...Array(n).keys()].reverse().map((i) => `Q<sub>${i}</sub>`)];
+    rows = [...Array(m).keys()].map((k) => [k, ...bin(k, n).split("")]);
+    cur = ff.count < m ? ff.count : -1;
+    sub = m < 1 << n ? `Na descida ${m} o contador chega a ${bin(m, n)}: a NE zera tudo e a contagem recomeça.`
+      : `Na descida ${m} volta a ${"0".repeat(n)}. Q<sub>0</sub> é o bit menos significativo.`;
+    sub += " O número de descidas é o próprio número contado, em binário nos Q.";
+  }
+  const tbl = (h, r, c, attr) => `<thead><tr>${h.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>` +
+    r.map((row, i) => `<tr ${attr}="${i}" class="${i === c ? "cur" : ""}">${row.map((x) => `<td>${x}</td>`).join("")}</tr>`).join("") + "</tbody>";
+  $("#ff-th").textContent = title;
+  $("#ff-tsub").innerHTML = sub;
+  $("#ff-table").innerHTML = tbl(head, rows, cur, "data-ffrow");
+  $("#ff-table").classList.toggle("noclick", t.id === "t" || t.id === "cnt");
+  const pc = $("#ff-prclr");
+  if (t.prclr) {
+    const pr = [[1, 1, "normal"], [0, 1, "1"], [1, 0, "0"], [0, 0, "não usar"]];
+    const pcur = pr.findIndex(([a, b]) => a === v.PR && b === v.CLR);
+    pc.innerHTML = `<h3 class="pc-h">Preset e Clear</h3><p class="sub">Ativos em 0: mandam mais que o clock.</p>` +
+      `<table class="tv">${tbl(["PR", "CLR", "Q"], pr, pcur, "data-pcrow")}</table>`;
+  } else pc.innerHTML = "";
+}
+
+// ------------------------------------------------------------------ montagem da aba
+function ffSw(k) {
+  return `<button type="button" class="sw" data-ff="${k}" aria-pressed="${!!ff.v[k]}"><span class="knob" aria-hidden="true"></span>` +
+    `<span>${k} = <span class="val">${ff.v[k]}</span></span></button>`;
+}
+function ffCounterDesc() {
+  const n = ff.bits, N = 1 << n;
+  let d = "O clock entra só no primeiro flip-flop; cada Q é o clock do seguinte, e cada um inverte na <b>descida</b> do anterior. " +
+    "Q<sub>0</sub> é o bit menos significativo.";
+  if (ff.mod < N) {
+    const ones = [...Array(n).keys()].filter((i) => (ff.mod >> i) & 1).reverse().map((i) => `Q<sub>${i}</sub>`).join(", ");
+    d += ` Para contar de 0 a ${ff.mod - 1}: ${ff.mod} = ${bin(ff.mod, n)}, então a NE recebe ${ones} e sua saída vai ao CLR de todos.`;
+  }
+  return d;
+}
+function ffSetup() {
+  const t = ffT();
+  $("#ff-picker").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.ff === t.id));
+  $("#ff-name").textContent = t.id === "cnt" ? "Contador assíncrono" : t.id === "t" ? "Flip-flop T" : "Flip-flop " + t.nome;
+  $("#ff-en").textContent = t.en;
+  $("#ff-view").hidden = !t.inside;
+  $("#ff-view").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.view === ff.view));
+  $("#cnt-opts").hidden = t.id !== "cnt";
+  $("#ff-grid").classList.toggle("cnt", t.id === "cnt");
+  if (t.id === "cnt") {
+    $("#bits").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", +b.dataset.b === ff.bits));
+    const N = 1 << ff.bits;
+    $("#cnt-mod").innerHTML = [...Array(N - 1).keys()].map((k) => N - k).map((m) =>
+      `<option value="${m}"${m === ff.mod ? " selected" : ""}>${m - 1}${m === N ? " (sem porta NE)" : m === 10 ? " (contador de década)" : ""}</option>`).join("");
+  }
+  ffReset();
+  let h = t.ins.map(ffSw).join("");
+  if (t.clk) h += ffSw("CK") + `<button class="btn" type="button" data-ffact="pulse" title="Atalho: Espaço">⎍ Pulso de clock</button>` +
+    `<button class="btn" type="button" data-ffact="auto" aria-pressed="false">▶ Clock automático</button>`;
+  if (t.prclr) h += ffSw("PR") + ffSw("CLR");
+  if (t.id === "cnt") h += `<button class="btn" type="button" data-ffact="zero">Zerar</button>`;
+  $("#ff-ctl").innerHTML = h;
+  $("#ff-desc").innerHTML = t.id === "cnt" ? ffCounterDesc() : t.desc;
+  $("#ff-ci").textContent = t.id === "cnt" ? (ff.mod === 10 ? "7490 (contador de década)" : "7493 (contador binário de 4 bits)") : t.ci;
+  ffRender();
+}
+function ffRender() {
+  const t = ffT();
+  $("#ff-ctl").querySelectorAll(".sw").forEach((b) => {
+    const x = ff.v[b.dataset.ff];
+    b.setAttribute("aria-pressed", !!x); b.querySelector(".val").textContent = x;
+  });
+  const ab = $("#ff-ctl [data-ffact=auto]");
+  if (ab) { ab.setAttribute("aria-pressed", !!ff.auto); ab.textContent = ff.auto ? "❚❚ Parar o clock" : "▶ Clock automático"; }
+  const m = $("#ff-msg"); m.hidden = !ff.msg; m.textContent = ff.msg;
+  const d = t.id === "cnt" ? ffCounter() : t.inside && ff.view === "dentro" ? ffInside(t) : ffSymbol(t);
+  const st = $("#ff-stage");
+  st.innerHTML = d.svg;
+  applyVals(st, d.vals);
+  ffTables(t);
+  $("#ff-wave").innerHTML = ffWave(t);
+}
+
 // ======================================================================== eventos
 function setMode(m) {
   state.mode = m; save();
   $("#tab-gates").setAttribute("aria-selected", m === "gates");
   $("#tab-expr").setAttribute("aria-selected", m === "expr");
+  $("#tab-ff").setAttribute("aria-selected", m === "ff");
   $("#mode-gates").hidden = m !== "gates";
   $("#mode-expr").hidden = m !== "expr";
-  stopPlay();
-  if (m === "gates") renderGates(); else { $("#expr-in").value = state.expr; compile(); }
+  $("#mode-ff").hidden = m !== "ff";
+  stopPlay(); ffStopTimers();
+  $("#keys").innerHTML = "Atalhos: " + (m === "ff"
+    ? "<kbd>S</kbd> <kbd>R</kbd> <kbd>J</kbd> <kbd>K</kbd> alternam as entradas · <kbd>Espaço</kbd> dá um pulso de clock · <kbd>1</kbd>–<kbd>6</kbd> escolhem o flip-flop"
+    : "<kbd>A</kbd> <kbd>B</kbd> <kbd>C</kbd> <kbd>D</kbd> alternam as entradas · <kbd>Espaço</kbd> percorre a tabela" +
+      (m === "gates" ? " · <kbd>1</kbd>–<kbd>7</kbd> escolhem a porta" : ""));
+  if (m === "gates") renderGates();
+  else if (m === "ff") ffSetup();
+  else { $("#expr-in").value = state.expr; compile(); }
 }
 function activeNames() {
   if (state.mode === "gates") return gateNames(state.gate);
+  if (state.mode === "ff") return [];
   return cur && cur.names ? cur.names : [];
 }
-function refresh() { if (state.mode === "gates") updateGates(); else updateExpr(); }
+function refresh() { if (state.mode === "gates") updateGates(); else if (state.mode === "expr") updateExpr(); }
 function toggleVar(v) {
   if (!activeNames().includes(v)) return;
   state.env[v] ^= 1; refresh();
@@ -1217,6 +1766,48 @@ function togglePlay() {
 
 $("#tab-gates").addEventListener("click", () => setMode("gates"));
 $("#tab-expr").addEventListener("click", () => setMode("expr"));
+$("#tab-ff").addEventListener("click", () => setMode("ff"));
+$("#ff-picker").innerHTML = FF_TYPES.map((t, i) => `<button type="button" data-ff-type="${t.id}" title="Atalho: ${i + 1}"><b>${t.nome}</b><small>${t.en}</small></button>`).join("");
+$("#ff-picker").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-ff-type]"); if (!b) return;
+  ff.type = b.dataset.ffType; save(); ffSetup();
+});
+$("#ff-view").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-view]"); if (!b) return;
+  ff.view = b.dataset.view; save();
+  $("#ff-view").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  ffRender();
+});
+$("#bits").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-b]"); if (!b) return;
+  ff.bits = +b.dataset.b; ff.mod = 1 << ff.bits; save(); ffSetup();
+});
+$("#cnt-mod").addEventListener("change", (e) => { ff.mod = +e.target.value; save(); ffSetup(); });
+$("#ff-clear").addEventListener("click", () => { ff.hist = []; ffRecord(); ffRender(); });
+$("#mode-ff").addEventListener("click", (e) => {
+  const act = e.target.closest("[data-ffact]");
+  if (act) {
+    const a = act.dataset.ffact;
+    if (a === "pulse") ffPulse();
+    else if (a === "auto") ffAuto();
+    else if (a === "zero") { if (ff.flash) { clearTimeout(ff.flash); ff.flash = null; } ff.count = 0; ff.msg = ""; ffRecord(); ffRender(); }
+    return;
+  }
+  const sw = e.target.closest("[data-ff]");
+  if (sw) { const k = sw.dataset.ff; ffSet({ [k]: 1 - ff.v[k] }); return; }
+  const pr = e.target.closest("tr[data-pcrow]");
+  if (pr) { const [a, b] = [[1, 1], [0, 1], [1, 0], [0, 0]][+pr.dataset.pcrow]; ffSet({ PR: a, CLR: b }); return; }
+  const tr = e.target.closest("tr[data-ffrow]");
+  if (tr) {
+    const t = ffT(), i = +tr.dataset.ffrow, AB = [[0, 0], [1, 0], [0, 1], [1, 1]];
+    if (t.id === "rs") { const [a, b] = AB[i]; ffSet({ S: a, R: b }); }
+    else if (t.id === "rsck" || t.id === "jk") {
+      if (i === 0) ffSet({ CK: 0 });
+      else { const [a, b] = AB[i - 1]; ffSet({ CK: 1, [t.ins[0]]: a, [t.ins[1]]: b }); }
+    } else if (t.id === "jkme" && i > 0) { const [a, b] = AB[i - 1]; ffSet({ J: a, K: b }); }
+  }
+});
+
 $("#picker").innerHTML = GATES.map((g, i) => `<button type="button" data-g="${g.id}" title="Atalho: ${i + 1}"><b>${g.nome}</b><small>${g.en.split(" ")[0]}</small></button>`).join("");
 $("#picker").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-g]"); if (!b) return;
@@ -1239,7 +1830,7 @@ document.addEventListener("click", (e) => {
     $("#expr-in").value = state.expr;
     compile(); return;
   }
-  const tr = e.target.closest("table.tv tbody tr");
+  const tr = e.target.closest("table.tv tbody tr[data-m]");
   if (tr) pickRow(+tr.dataset.m);
 });
 $("#expr-form").addEventListener("submit", (e) => {
@@ -1278,6 +1869,13 @@ document.addEventListener("keydown", (e) => {
   if (e.target.closest && e.target.closest("input, select, textarea")) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key.toUpperCase();
+  if (state.mode === "ff") {
+    const t = ffT();
+    if (t.ins.includes(k)) { ffSet({ [k]: 1 - ff.v[k] }); e.preventDefault(); }
+    else if (e.key === " ") { ffPulse(); e.preventDefault(); }
+    else if (/^[1-6]$/.test(e.key)) { ff.type = FF_TYPES[+e.key - 1].id; save(); ffSetup(); }
+    return;
+  }
   if ("ABCD".includes(k) && k.length === 1) { toggleVar(k); e.preventDefault(); }
   else if (e.key === " ") { togglePlay(); e.preventDefault(); }
   else if (state.mode === "gates" && /^[1-7]$/.test(e.key)) { state.gate = GATES[+e.key - 1].id; save(); renderGates(); }
@@ -1285,6 +1883,7 @@ document.addEventListener("keydown", (e) => {
 
 if (location.hash === "#expressao") state.mode = "expr";
 if (location.hash === "#portas") state.mode = "gates";
+if (location.hash === "#flipflops") state.mode = "ff";
 $("#expr-in").value = state.expr;
 setMode(state.mode);
 })();
