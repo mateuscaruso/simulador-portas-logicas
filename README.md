@@ -11,6 +11,8 @@ Simulador para as aulas de **Sistemas Digitais** do Curso Técnico em Eletrotéc
 
 O arquivo `index.html` funciona também sem internet: basta baixá-lo e abrir no navegador.
 
+**Visitas ao site:** [painel do GoatCounter](https://simulador-portas.goatcounter.com)
+
 ## Autor e licença
 
 © Prof. Mateus Caruso · CEFET/RJ.
